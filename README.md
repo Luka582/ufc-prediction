@@ -1,4 +1,4 @@
 - project for predicting ufc fight outcomes
 - stats are scraped from ufcstats.com
 - stats are then processed and feature engineeering is done on them
-- tried a few models, and a logistic regression model is the best for now
+- tried a few models, and a logistic regression model is the best for now (65% accuracy)
