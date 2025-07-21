@@ -1,15 +1,16 @@
 import pandas as pd
 import csv
+import numpy as np
 EXAMPLE_FIGHTER_NAME = "Jon Jones"
 EXAMPLE_DATE = "February 06, 2021"
 
 
-def make_fighter_features(df: pd.DataFrame,name: str, date:str):
+def make_fighter_features(df: pd.DataFrame,name: str, date:str, is_this_function_used_for_future_inference= False):
     result_dict = {}
     df = df.copy()
     df["date"]= pd.to_datetime(df["date"])
-    df_red = df.loc[(df["red fighter"] == name) & (df["date"] < pd.to_datetime(date))].sort_values(by= ["date"], ascending= False)
-    df_blue = df.loc[(df["blue fighter"] == name) & (df["date"] < pd.to_datetime(date))].sort_values(by= ["date"], ascending= False)
+    df_red = df.loc[(df["red fighter"] == name) & ((df["date"] <= pd.to_datetime(date)) if is_this_function_used_for_future_inference else (df["date"] < pd.to_datetime(date)))].sort_values(by= ["date"], ascending= False)
+    df_blue = df.loc[(df["blue fighter"] == name) & ((df["date"] <= pd.to_datetime(date)) if is_this_function_used_for_future_inference else (df["date"] < pd.to_datetime(date)))].sort_values(by= ["date"], ascending= False)
     df_all = pd.concat([df_red,df_blue]).sort_values(by= ["date"], ascending= False)
     if len(df_all) == 0:
         raise ValueError(f"No prior fight history for {name}")
@@ -167,11 +168,11 @@ def make_fighter_features(df: pd.DataFrame,name: str, date:str):
 
     return result_dict
 
-def make_fight_features(df: pd.DataFrame, row: pd.Series, with_diff = False):
+def make_fight_features(df, row: pd.Series, with_diff = False, is_this_function_used_for_future_inference = False):
     df = df.copy()
     df["date"] = pd.to_datetime(df["date"])
-    red_blue = df[(df["red fighter"] == row["red fighter"]) & (df["blue fighter"] == row["blue fighter"]) & (df["date"] < pd.to_datetime(row["date"]))].sort_values(["date"], ascending= False)
-    blue_red = df[(df["red fighter"] == row["blue fighter"]) & (df["blue fighter"] == row["red fighter"]) & (df["date"] < pd.to_datetime(row["date"]))].sort_values(["date"], ascending= False)
+    red_blue = df[(df["red fighter"] == row["red fighter"]) & (df["blue fighter"] == row["blue fighter"]) & ((df["date"] <= pd.to_datetime(row["date"])) if is_this_function_used_for_future_inference else (df["date"] < pd.to_datetime(row["date"])))].sort_values(["date"], ascending= False)
+    blue_red = df[(df["red fighter"] == row["blue fighter"]) & (df["blue fighter"] == row["red fighter"]) & ((df["date"] <= pd.to_datetime(row["date"])) if is_this_function_used_for_future_inference else (df["date"] < pd.to_datetime(row["date"])))].sort_values(["date"], ascending= False)
     
     if with_diff:
         result_dict = {}
@@ -187,8 +188,8 @@ def make_fight_features(df: pd.DataFrame, row: pd.Series, with_diff = False):
         result_dict["is blue southpaw"] = 1 if row["blue stance"] == "Southpaw" else 0
         result_dict["is blue switch"] = 1 if row["blue stance"] == "Switch" else 0
         result_dict["is blue open stance"] = 1 if row["blue stance"] == "Open Stance" else 0
-        red_stats = make_fighter_features(df,row["red fighter"], row["date"])
-        blue_stats = make_fighter_features(df,row["blue fighter"], row["date"])
+        red_stats = make_fighter_features(df,row["red fighter"], row["date"],is_this_function_used_for_future_inference=is_this_function_used_for_future_inference)
+        blue_stats = make_fighter_features(df,row["blue fighter"], row["date"],is_this_function_used_for_future_inference=is_this_function_used_for_future_inference)
         for key in red_stats:
             result_dict[f"diff {key}"] = red_stats[key] - blue_stats[key]
         try:
@@ -218,7 +219,7 @@ def make_fight_features(df: pd.DataFrame, row: pd.Series, with_diff = False):
         result_dict["is red southpaw"] = 1 if row["red stance"] == "Southpaw" else 0
         result_dict["is red switch"] = 1 if row["red stance"] == "Switch" else 0
         result_dict["is red open stance"] = 1 if row["red stance"] == "Open Stance" else 0
-        for key, value in make_fighter_features(df,row["red fighter"], row["date"]).items():
+        for key, value in make_fighter_features(df,row["red fighter"], row["date"], is_this_function_used_for_future_inference=is_this_function_used_for_future_inference).items():
             result_dict[f"red {key}"] = value
         try:
             result_dict["red historical success rate with blue"] = (len(red_blue[red_blue["winner"] == "red"]) + len(blue_red[blue_red["winner"] == "blue"]))/(len(red_blue) + len(blue_red))
@@ -233,7 +234,7 @@ def make_fight_features(df: pd.DataFrame, row: pd.Series, with_diff = False):
         result_dict["is blue southpaw"] = 1 if row["blue stance"] == "Southpaw" else 0
         result_dict["is blue switch"] = 1 if row["blue stance"] == "Switch" else 0
         result_dict["is blue open stance"] = 1 if row["blue stance"] == "Open Stance" else 0
-        for key, value in make_fighter_features(df,row["blue fighter"], row["date"]).items():
+        for key, value in make_fighter_features(df,row["blue fighter"], row["date"], is_this_function_used_for_future_inference=is_this_function_used_for_future_inference).items():
             result_dict[f"blue {key}"] = value
         try:
             result_dict["blue historical success rate with red"] = (len(red_blue[red_blue["winner"] == "blue"]) + len(blue_red[blue_red["winner"] == "red"]))/(len(red_blue) + len(blue_red))
@@ -247,6 +248,9 @@ def make_fight_features(df: pd.DataFrame, row: pd.Series, with_diff = False):
         else:
             result_dict["winner"] = 0.5
     
+    if is_this_function_used_for_future_inference:
+        del result_dict["winner"]
+        return np.array([float(x) for x in result_dict.values()])
     return result_dict
 
 

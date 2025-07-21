@@ -1,4 +1,5 @@
 - project for predicting ufc fight outcomes
 - stats are scraped from ufcstats.com
 - stats are then processed and feature engineeering is done on them
-- tried a few models, and a logistic regression model is the best for now (65% accuracy)
+- tried a few models, and currently using a simple neural network
+- by running predict.py, it updates google sheets with the computed probabilities (https://docs.google.com/spreadsheets/d/1QH45DYmD9u08TWIDf9YwUguQ-MZWuVWMhGbCry2NkE8/edit?usp=sharing)

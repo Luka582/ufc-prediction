@@ -159,7 +159,7 @@ def get_fighter_stats(url:str, session):
 if __name__ == "__main__":
     session = requests.Session()
     print(get_fight_stats("http://www.ufcstats.com/fight-details/426e7a3de68117b0", session))
-
+    session.close()
 
 
 

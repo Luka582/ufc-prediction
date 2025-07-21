@@ -1,4 +1,4 @@
-from utils import get_fight_stats, EXAMPLE_FIGHT_URL
+from scraping_and_processing.utils import get_fight_stats, EXAMPLE_FIGHT_URL
 from bs4 import BeautifulSoup
 import requests
 import csv
@@ -46,4 +46,5 @@ if __name__ == "__main__":
         print(f"Found info for {successful}/{lenght} fights, failed to scrape {failed} fights", end="")
         print("\r", end="")
     
+    session.close()
     print("\nDone scraping!")
