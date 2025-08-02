@@ -12,7 +12,7 @@ import random
 from dotenv import load_dotenv
 
 load_dotenv()
-model = tf.keras.models.load_model("models/nn_model.keras")
+model = tf.keras.models.load_model("models/nn_raw_output.keras")
 UPCOMING_FIGHTS = "http://www.ufcstats.com/statistics/events/upcoming?page=all"
 SHEETY_ENDPOINT = "https://api.sheety.co/5fd22a7303f8e2e588ecbc975f0cee99/predictions/ufc"
 header = {"Authorization": f"Basic {os.getenv('basic_auth')}"}
@@ -92,7 +92,7 @@ for i, (red_fighter, blue_fighter, event_name, red_fighter_link, blue_fighter_li
         row["blue height"], row["blue weight"], row["blue reach"], row["blue stance"], row["blue age"] = get_fighter_stats(blue_fighter_link, session)
         row["winner"] = "not given"
         x = make_fight_features(df= df,row=row,is_this_function_used_for_future_inference=True)
-        y = 100.0*float(model.predict(np.array([x]))[0][0])
+        y = 100.0*float(np.array(tf.sigmoid(model.predict(np.array([x]))))[0][0])
         outcome = {"eventName":event_name, "redFighter":red_fighter, "blueFighter":blue_fighter, "redOdds":y}
         response = session.post(SHEETY_ENDPOINT,json= {"ufc" : outcome}, headers= header)
         response.raise_for_status()
