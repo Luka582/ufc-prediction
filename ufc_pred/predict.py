@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 
 def table_features(red, blue, odds):
     winner = red if odds > 0.5 else blue
-    score = round((abs(0.5-odds)*2.0)**0.25)
+    score = round((abs(0.5-odds)*20.0)**0.25)
     return winner, f"{score}/10"
 
 load_dotenv()
