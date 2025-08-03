@@ -11,6 +11,11 @@ import time
 import random
 from dotenv import load_dotenv
 
+def table_features(red, blue, odds):
+    winner = red if odds > 0.5 else blue
+    score = round((abs(0.5-odds)*2.0)**0.25)
+    return winner, f"{score}/10"
+
 load_dotenv()
 model = tf.keras.models.load_model("models/nn_raw_output.keras")
 UPCOMING_FIGHTS = "http://www.ufcstats.com/statistics/events/upcoming?page=all"
@@ -93,7 +98,8 @@ for i, (red_fighter, blue_fighter, event_name, red_fighter_link, blue_fighter_li
         row["winner"] = "not given"
         x = make_fight_features(df= df,row=row,is_this_function_used_for_future_inference=True)
         y = 100.0*float(np.array(tf.sigmoid(model.predict(np.array([x]))))[0][0])
-        outcome = {"eventName":event_name, "redFighter":red_fighter, "blueFighter":blue_fighter, "redOdds":y}
+        winner, score = table_features(red_fighter, blue_fighter, y)
+        outcome = {"eventName":event_name, "redFighter":red_fighter, "blueFighter":blue_fighter, "winner":winner, "score":score}
         response = session.post(SHEETY_ENDPOINT,json= {"ufc" : outcome}, headers= header)
         response.raise_for_status()
     except ValueError:
